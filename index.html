@@ -396,13 +396,26 @@ async function fetchShipment(){
       </tr>`;
     });
 
-    // 合計行
-    const colTotalCells=colTotals.map(v=>`<td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--blue)">${v>0?v:'—'}</td>`).join("");
-    html+=`<tr style="background:#E3F2FD;border-top:2px solid var(--border)">
-      <td style="padding:6px 8px;font-weight:700">合計</td>
-      ${colTotalCells}
-      <td style="padding:6px 8px;text-align:center;font-weight:700;color:var(--blue)">${grandTotal}</td>
-    </tr>`;
+    // 合計行（食パン・ドーナツ別）
+    const breadItems = SHIPMENT_ITEMS_DEF.filter(i=>i.unit==="斤");
+    const donutItems = SHIPMENT_ITEMS_DEF.filter(i=>i.unit==="個");
+
+    function subTotalRow(items, label, bg){
+      const totals=new Array(SHIPMENT_STORES.length).fill(0);
+      items.forEach(item=>{
+        SHIPMENT_STORES.forEach((s,si)=>{ totals[si]+=map[item.id][s]; });
+      });
+      const grand=totals.reduce((s,v)=>s+v,0);
+      const cells=totals.map(v=>`<td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--blue)">${v>0?v:'—'}</td>`).join("");
+      return `<tr style="background:${bg};border-top:2px solid var(--border)">
+        <td style="padding:6px 8px;font-weight:700;font-size:11px">${label}</td>
+        ${cells}
+        <td style="padding:6px 8px;text-align:center;font-weight:700;color:var(--blue)">${grand}</td>
+      </tr>`;
+    }
+
+    html += subTotalRow(breadItems, "🍞 食パン合計", "#E3F2FD");
+    html += subTotalRow(donutItems, "🍩 ドーナツ合計", "#FFF3E0");
 
     tbody.innerHTML=html;
   }catch(e){
