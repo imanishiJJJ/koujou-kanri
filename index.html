@@ -156,15 +156,31 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
       <div id="items-grid"></div>
     </div>
 
-    <!-- 食パン出荷数（発注履歴より自動取得） -->
+    <!-- 食パン出荷数（店舗×商品の表形式） -->
     <div class="section">
       <div class="section-header">
         <span class="section-title">🚚 食パン出荷数</span>
         <span class="section-badge badge-orange">発注履歴より自動取得</span>
       </div>
       <button class="fetch-btn" onclick="fetchShipment()" style="margin-bottom:12px;width:100%;">↻ 当日分を取得</button>
-      <div id="shipment-list">
-        <div class="empty" style="padding:20px">「当日分を取得」を押してください</div>
+      <div style="overflow-x:auto;">
+        <table id="shipment-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px;">
+          <thead>
+            <tr style="background:var(--accent);color:#fff;">
+              <th style="padding:6px 8px;text-align:left;font-weight:600;white-space:nowrap">品名</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">太田川</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">山王</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">中島</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">小牧</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">長久手</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">庄内</th>
+              <th style="padding:6px 8px;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.15)">合計</th>
+            </tr>
+          </thead>
+          <tbody id="shipment-tbody">
+            <tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text2)">「当日分を取得」を押してください</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -319,46 +335,78 @@ function calcSummary(){
   document.getElementById("summary-jiji").textContent=jiji ? `¥${fmtNum(jiji)}` : "—";
 }
 
-// ══ 食パン出荷数取得（発注管理GASから） ══
+// ══ 食パン出荷数取得（店舗×商品の表形式） ══
+const SHIPMENT_STORES = ["太田川店","山王店","中島店","小牧店","長久手店","庄内緑地公園店"];
+const SHIPMENT_STORE_LABELS = ["太田川","山王","中島","小牧","長久手","庄内"];
+const SHIPMENT_ITEMS_DEF = [
+  {id:1, name:"食パン7枚切",       unit:"斤"},
+  {id:2, name:"食パン10枚切",      unit:"斤"},
+  {id:3, name:"食パン20枚切",      unit:"斤"},
+  {id:4, name:"食パンスライスなし", unit:"斤"},
+  {id:5, name:"生ドーナツプレーン", unit:"個"},
+  {id:6, name:"生ドーナツチョコ",  unit:"個"},
+];
+
 async function fetchShipment(){
   const url=getGasUrl();
   if(!url){alert("GAS URLを設定してください");return;}
   const date=document.getElementById("f-date").value;
-  const list=document.getElementById("shipment-list");
-  list.innerHTML='<div class="loading">取得中…</div>';
+  const tbody=document.getElementById("shipment-tbody");
+  tbody.innerHTML='<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text2)">取得中…</td></tr>';
   try{
     const res=await fetch(`${url}?action=list`);
     const json=await res.json();
     if(json.status!=="ok") throw new Error(json.message);
     const orders=(json.orders||[]).filter(o=>String(o.deliveryDate).slice(0,10)===date);
-    // 店舗別・品名別に集計
-    const shipMap={};
-    SHIPMENT_ITEMS.forEach(name=>{ shipMap[name]=0; });
+
+    // 店舗×商品の集計
+    const map={};
+    SHIPMENT_ITEMS_DEF.forEach(item=>{
+      map[item.id]={};
+      SHIPMENT_STORES.forEach(s=>{ map[item.id][s]=0; });
+    });
     orders.forEach(o=>{
-      SHIPMENT_ITEMS.forEach((name,idx)=>{
-        const item=[{id:1},{id:2},{id:3},{id:4}][idx];
-        const dQty=Number(o[`daiko_${item.id}`])||0;
-        const jQty=Number(o[`jisha_${item.id}`])||0;
-        shipMap[name]+=dQty+jQty;
+      SHIPMENT_ITEMS_DEF.forEach(item=>{
+        const qty=(Number(o[`daiko_${item.id}`])||0)+(Number(o[`jisha_${item.id}`])||0);
+        if(qty>0 && map[item.id][o.store]!==undefined){
+          map[item.id][o.store]+=qty;
+        }
       });
     });
-    const total=Object.values(shipMap).reduce((s,v)=>s+v,0);
-    if(total===0){
-      list.innerHTML=`<div class="empty" style="padding:16px">${fmtDate(date)}の出荷データがありません</div>`;
-      return;
-    }
-    list.innerHTML=SHIPMENT_ITEMS.map(name=>`
-      <div class="shipment-row">
-        <span class="shipment-name">${name}</span>
-        <span><span class="shipment-qty">${fmtNum(shipMap[name])}</span>
-        <span class="shipment-unit"> 斤</span></span>
-      </div>`).join("")+
-      `<div class="shipment-row" style="margin-top:4px;border-top:1.5px solid var(--border);padding-top:8px;">
-        <span style="font-weight:700;font-size:13px">合計</span>
-        <span><span class="shipment-qty">${fmtNum(total)}</span><span class="shipment-unit"> 斤</span></span>
-      </div>`;
+
+    // 行生成
+    let html="";
+    let colTotals=new Array(SHIPMENT_STORES.length).fill(0);
+    let grandTotal=0;
+    SHIPMENT_ITEMS_DEF.forEach((item,ri)=>{
+      const bg=ri%2===0?"#fff":"var(--surf2)";
+      let rowTotal=0;
+      let cells="";
+      SHIPMENT_STORES.forEach((s,si)=>{
+        const v=map[item.id][s];
+        rowTotal+=v;
+        colTotals[si]+=v;
+        cells+=`<td style="padding:6px 4px;text-align:center;font-weight:${v>0?'700':'400'};color:${v>0?'var(--accent)':'var(--text2)'};">${v>0?v:'—'}</td>`;
+      });
+      grandTotal+=rowTotal;
+      html+=`<tr style="background:${bg}">
+        <td style="padding:6px 8px;font-weight:500;white-space:nowrap">${item.name}<span style="font-size:10px;color:var(--text2);margin-left:4px">${item.unit}</span></td>
+        ${cells}
+        <td style="padding:6px 8px;text-align:center;font-weight:700;background:#FFF0F3;color:var(--accent)">${rowTotal>0?rowTotal:'—'}</td>
+      </tr>`;
+    });
+
+    // 合計行
+    const colTotalCells=colTotals.map(v=>`<td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--blue)">${v>0?v:'—'}</td>`).join("");
+    html+=`<tr style="background:#E3F2FD;border-top:2px solid var(--border)">
+      <td style="padding:6px 8px;font-weight:700">合計</td>
+      ${colTotalCells}
+      <td style="padding:6px 8px;text-align:center;font-weight:700;color:var(--blue)">${grandTotal}</td>
+    </tr>`;
+
+    tbody.innerHTML=html;
   }catch(e){
-    list.innerHTML=`<div style="color:var(--accent);font-size:12px;padding:12px">エラー: ${e.message}</div>`;
+    tbody.innerHTML=`<tr><td colspan="8" style="padding:12px;color:var(--accent);font-size:12px">エラー: ${e.message}</td></tr>`;
   }
 }
 
