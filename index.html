@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>🏭 工場日報 — カフェヨシノ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FDF6F0;--surface:#FFFFFF;--surf2:#FFF0EC;--border:#E8CFC0;
+  --accent:#C8385A;--accent2:#A82848;--text:#3D1F1F;--text2:#9A7060;
+  --green:#4CAF7D;--blue:#1565C0;--orange:#E65100;
+  --safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.header{position:sticky;top:0;z-index:100;background:#fff;border-bottom:2px solid var(--accent);padding-top:var(--safe-t);box-shadow:0 2px 8px rgba(200,56,90,.1);}
+.header-inner{padding:12px 16px 12px;}
+.header h1{font-size:17px;font-weight:700;color:var(--accent);}
+.header p{font-size:11px;color:var(--text2);margin-top:2px;}
+
+.content{padding:16px;padding-bottom:calc(100px + var(--safe-b));max-width:600px;margin:0 auto;}
+
+/* セットアップバナー */
+.setup-banner{background:#FFF5F0;border:1px solid #F0C0A0;border-radius:12px;padding:14px;margin-bottom:20px;}
+.setup-banner p{font-size:12px;color:#8B5E3C;margin-bottom:10px;}
+.setup-row{display:flex;gap:8px;}
+.setup-input{flex:1;background:#fff;border:1px solid #E8CFC0;border-radius:8px;padding:11px 12px;color:var(--text);font-family:inherit;font-size:13px;min-width:0;}
+.setup-input:focus{outline:none;border-color:var(--accent);}
+.setup-btn{background:var(--accent);border:none;border-radius:8px;padding:11px 16px;color:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;}
+.connected-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#F0FFF0;border:1px solid #A8D8A0;border-radius:10px;font-size:12px;color:#3D7A3D;}
+.connected-badge button{margin-left:auto;background:transparent;border:1px solid #C0D0C0;border-radius:6px;padding:4px 12px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;}
+
+/* 日付 */
+.date-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.date-label{font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;}
+.date-input{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:11px 12px;color:var(--text);font-family:inherit;font-size:15px;font-weight:600;}
+.date-input:focus{outline:none;border-color:var(--accent);}
+
+/* セクション */
+.section{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(200,56,90,.06);}
+.section-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.section-title{font-size:14px;font-weight:700;color:var(--text);}
+.section-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.badge-blue{background:#E3F2FD;color:var(--blue);}
+.badge-orange{background:#FFF3E0;color:var(--orange);}
+.badge-green{background:#E8F5E9;color:#2E7D32;}
+
+/* 商品入力行 */
+.item-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.item-row:last-child{margin-bottom:0;}
+.item-name{flex:1;font-size:13px;color:var(--text);font-weight:500;}
+.item-unit{font-size:11px;color:var(--text2);white-space:nowrap;}
+.num-input{width:90px;background:var(--surf2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:inherit;font-size:18px;font-weight:700;text-align:center;-moz-appearance:textfield;appearance:textfield;}
+.num-input::-webkit-inner-spin-button,.num-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.num-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,56,90,.1);}
+.num-input.has-value{border-color:var(--accent);background:#FFF0F3;color:var(--accent);}
+.num-input:focus::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+/* 2列入力（製造数・ストック数） */
+.double-input{display:flex;gap:6px;}
+.double-label{font-size:10px;color:var(--text2);text-align:center;margin-bottom:3px;}
+
+/* 労働時間 */
+.hours-row{display:flex;align-items:center;gap:12px;}
+.hours-input{width:120px;background:var(--surf2);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:22px;font-weight:700;text-align:center;-moz-appearance:textfield;appearance:textfield;}
+.hours-input::-webkit-inner-spin-button,.hours-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
+.hours-input:focus{outline:none;border-color:var(--accent);}
+.hours-unit{font-size:13px;color:var(--text2);}
+
+/* 出荷数（自動取得） */
+.shipment-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.shipment-row:last-child{border-bottom:none;}
+.shipment-name{font-size:13px;color:var(--text);}
+.shipment-qty{font-size:16px;font-weight:700;color:var(--blue);}
+.shipment-unit{font-size:11px;color:var(--text2);}
+.fetch-btn{background:#E3F2FD;border:1px solid #90CAF9;border-radius:8px;padding:8px 14px;color:var(--blue);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+
+/* 集計カード */
+.summary-card{background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;padding:16px;margin-bottom:16px;color:#fff;}
+.summary-title{font-size:12px;opacity:.8;margin-bottom:4px;}
+.summary-value{font-size:28px;font-weight:700;}
+.summary-sub{font-size:11px;opacity:.7;margin-top:2px;}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.summary-item{background:rgba(255,255,255,.15);border-radius:10px;padding:10px 12px;}
+.summary-item-label{font-size:10px;opacity:.8;}
+.summary-item-value{font-size:18px;font-weight:700;margin-top:2px;}
+
+/* 送信ボタン */
+.submit-footer{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(253,246,240,.95);border-top:1px solid var(--border);padding:12px 16px;padding-bottom:calc(12px + var(--safe-b));backdrop-filter:blur(8px);}
+.submit-btn{width:100%;max-width:600px;margin:0 auto;display:block;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(200,56,90,.3);}
+.submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+.submit-btn.saved{background:linear-gradient(135deg,var(--green),#388E5D);}
+
+/* 履歴タブ */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.tab{flex:1;padding:10px 0;border:none;background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700;}
+
+.history-card{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.history-date{font-size:12px;color:var(--text2);margin-bottom:8px;}
+.history-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.history-item{background:var(--surf2);border-radius:8px;padding:8px 10px;}
+.history-item-label{font-size:10px;color:var(--text2);}
+.history-item-value{font-size:15px;font-weight:700;color:var(--text);margin-top:2px;}
+.empty{text-align:center;padding:40px;color:var(--text2);font-size:14px;}
+.loading{text-align:center;padding:40px;color:var(--text2);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>🏭 工場日報システム</h1>
+    <p>株式会社 カフェヨシノ — セントレアキッチンB工場</p>
+  </div>
+</div>
+
+<div class="content">
+  <!-- GAS設定バナー -->
+  <div id="setup-banner" class="setup-banner">
+    <p>⚙️ 初回設定：Google Apps Script の URL を入力してください</p>
+    <div class="setup-row">
+      <input class="setup-input" id="gas-url-input" type="url" placeholder="https://script.google.com/macros/s/…/exec">
+      <button class="setup-btn" onclick="saveGasUrl()">保存</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-input" onclick="switchTab('input')">📝 日報入力</button>
+    <button class="tab" id="tab-history" onclick="switchTab('history')">📊 履歴</button>
+  </div>
+
+  <!-- 日報入力 -->
+  <div id="tab-input-content">
+
+    <!-- 日付 -->
+    <div class="date-row">
+      <span class="date-label">📅 日付</span>
+      <input type="date" class="date-input" id="f-date">
+    </div>
+
+    <!-- 製造数・ストック数 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">🍞 製造数・ストック数</span>
+        <span class="section-badge badge-blue">個数入力</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;">
+        <div style="width:90px;text-align:center;font-size:10px;color:var(--text2);font-weight:600;">製造数</div>
+        <div style="width:90px;text-align:center;font-size:10px;color:var(--text2);font-weight:600;">ストック数</div>
+      </div>
+      <div id="items-grid"></div>
+    </div>
+
+    <!-- 食パン出荷数（発注履歴より自動取得） -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">🚚 食パン出荷数</span>
+        <span class="section-badge badge-orange">発注履歴より自動取得</span>
+      </div>
+      <button class="fetch-btn" onclick="fetchShipment()" style="margin-bottom:12px;width:100%;">↻ 当日分を取得</button>
+      <div id="shipment-list">
+        <div class="empty" style="padding:20px">「当日分を取得」を押してください</div>
+      </div>
+    </div>
+
+    <!-- 労働時間 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title">⏱️ 総労働時間</span>
+        <span class="section-badge badge-green">人時計算用</span>
+      </div>
+      <div class="hours-row">
+        <input type="number" inputmode="decimal" class="hours-input" id="f-hours" placeholder="0.0"
+          onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
+          onwheel="event.preventDefault()">
+        <span class="hours-unit">時間</span>
+      </div>
+    </div>
+
+    <!-- リアルタイム集計 -->
+    <div class="summary-card" id="summary-card">
+      <div class="summary-title">本日の製造売上高（原価ベース）</div>
+      <div class="summary-value" id="summary-sales">¥0</div>
+      <div class="summary-sub">製造数 × 原価単価</div>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-item-label">人時売上高</div>
+          <div class="summary-item-value" id="summary-jiji">—</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-item-label">総製造個数</div>
+          <div class="summary-item-value" id="summary-total">0個</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 履歴 -->
+  <div id="tab-history-content" style="display:none">
+    <button class="fetch-btn" onclick="loadHistory()" style="width:100%;margin-bottom:14px;">↻ 履歴を読み込む</button>
+    <div id="history-list"><div class="empty">「履歴を読み込む」を押してください</div></div>
+  </div>
+
+</div>
+
+<div class="submit-footer" id="submit-footer">
+  <button class="submit-btn" id="submit-btn" onclick="submitReport()">日報を登録する →</button>
+</div>
+
+<script>
+// ══ 商品マスタ（製造対象） ══
+const ITEMS = [
+  {id:1,  name:"食パン7枚切",           unit:"斤", cost:610},
+  {id:2,  name:"食パン10枚切",          unit:"斤", cost:610},
+  {id:3,  name:"食パン20枚切",          unit:"斤", cost:610},
+  {id:4,  name:"食パンスライスなし",     unit:"斤", cost:610},
+  {id:5,  name:"生ドーナツプレーン",     unit:"個", cost:105},
+  {id:6,  name:"生ドーナツチョコ",      unit:"個", cost:145},
+  {id:24, name:"生ドーナツプレーン生地", unit:"個", cost:53},
+  {id:25, name:"生ドーナツココア生地",   unit:"個", cost:66},
+  {id:26, name:"食パン生地",            unit:"個", cost:28},
+];
+
+// 食パン出荷数（発注履歴から取得対象）
+const SHIPMENT_ITEMS = [
+  "食パン7枚切","食パン10枚切","食パン20枚切","食パンスライスなし"
+];
+
+// ══ GAS URL ══
+const GAS_KEY = "yoshino_koujou_gas_url";
+function getGasUrl(){ return localStorage.getItem(GAS_KEY)||""; }
+function saveGasUrl(){
+  const url=document.getElementById("gas-url-input").value.trim();
+  if(!url){alert("URLを入力してください");return;}
+  localStorage.setItem(GAS_KEY,url);
+  updateBanner();
+}
+function resetGasUrl(){ localStorage.removeItem(GAS_KEY); location.reload(); }
+function updateBanner(){
+  const url=getGasUrl();
+  if(!url) return;
+  document.getElementById("setup-banner").innerHTML=
+    `<div class="connected-badge">✅ GAS接続済み<button onclick="resetGasUrl()">変更</button></div>`;
+}
+
+// ══ ユーティリティ ══
+function today(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function nowStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtNum(n){ return Number(n).toLocaleString(); }
+function fmtDate(s){
+  if(!s) return "";
+  const str=String(s).replace(/^'/,"").slice(0,10);
+  const parts=str.split("-");
+  if(parts.length<3) return s;
+  return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+}
+
+// ══ タブ ══
+function switchTab(tab){
+  document.getElementById("tab-input-content").style.display=tab==="input"?"":"none";
+  document.getElementById("tab-history-content").style.display=tab==="history"?"":"none";
+  document.getElementById("submit-footer").style.display=tab==="input"?"":"none";
+  document.getElementById("tab-input").className="tab"+(tab==="input"?" active":"");
+  document.getElementById("tab-history").className="tab"+(tab==="history"?" active":"");
+}
+
+// ══ フォーム初期化 ══
+function initForm(){
+  document.getElementById("f-date").value = today();
+  const grid=document.getElementById("items-grid");
+  ITEMS.forEach(item=>{
+    const row=document.createElement("div");
+    row.className="item-row";
+    row.innerHTML=`
+      <span class="item-name">${item.name}</span>
+      <span class="item-unit">${item.unit}</span>
+      <div class="double-input">
+        <input type="number" inputmode="numeric" min="0" placeholder="0"
+          class="num-input" id="mfg-${item.id}"
+          onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
+          onwheel="event.preventDefault()"
+          oninput="this.classList.toggle('has-value',this.value!=='');calcSummary()">
+        <input type="number" inputmode="numeric" min="0" placeholder="0"
+          class="num-input" id="stk-${item.id}"
+          onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
+          onwheel="event.preventDefault()"
+          oninput="this.classList.toggle('has-value',this.value!=='')">
+      </div>`;
+    grid.appendChild(row);
+  });
+  document.getElementById("f-hours").addEventListener("input", calcSummary);
+}
+
+// ══ 集計計算 ══
+function calcSummary(){
+  let sales=0, totalQty=0;
+  ITEMS.forEach(item=>{
+    const qty=Number(document.getElementById(`mfg-${item.id}`).value)||0;
+    sales += qty * item.cost;
+    totalQty += qty;
+  });
+  const hours=parseFloat(document.getElementById("f-hours").value)||0;
+  const jiji=hours>0 ? Math.round(sales/hours) : null;
+
+  document.getElementById("summary-sales").textContent=`¥${fmtNum(sales)}`;
+  document.getElementById("summary-total").textContent=`${fmtNum(totalQty)}個`;
+  document.getElementById("summary-jiji").textContent=jiji ? `¥${fmtNum(jiji)}` : "—";
+}
+
+// ══ 食パン出荷数取得（発注管理GASから） ══
+async function fetchShipment(){
+  const url=getGasUrl();
+  if(!url){alert("GAS URLを設定してください");return;}
+  const date=document.getElementById("f-date").value;
+  const list=document.getElementById("shipment-list");
+  list.innerHTML='<div class="loading">取得中…</div>';
+  try{
+    const res=await fetch(`${url}?action=list`);
+    const json=await res.json();
+    if(json.status!=="ok") throw new Error(json.message);
+    const orders=(json.orders||[]).filter(o=>String(o.deliveryDate).slice(0,10)===date);
+    // 店舗別・品名別に集計
+    const shipMap={};
+    SHIPMENT_ITEMS.forEach(name=>{ shipMap[name]=0; });
+    orders.forEach(o=>{
+      SHIPMENT_ITEMS.forEach((name,idx)=>{
+        const item=[{id:1},{id:2},{id:3},{id:4}][idx];
+        const dQty=Number(o[`daiko_${item.id}`])||0;
+        const jQty=Number(o[`jisha_${item.id}`])||0;
+        shipMap[name]+=dQty+jQty;
+      });
+    });
+    const total=Object.values(shipMap).reduce((s,v)=>s+v,0);
+    if(total===0){
+      list.innerHTML=`<div class="empty" style="padding:16px">${fmtDate(date)}の出荷データがありません</div>`;
+      return;
+    }
+    list.innerHTML=SHIPMENT_ITEMS.map(name=>`
+      <div class="shipment-row">
+        <span class="shipment-name">${name}</span>
+        <span><span class="shipment-qty">${fmtNum(shipMap[name])}</span>
+        <span class="shipment-unit"> 斤</span></span>
+      </div>`).join("")+
+      `<div class="shipment-row" style="margin-top:4px;border-top:1.5px solid var(--border);padding-top:8px;">
+        <span style="font-weight:700;font-size:13px">合計</span>
+        <span><span class="shipment-qty">${fmtNum(total)}</span><span class="shipment-unit"> 斤</span></span>
+      </div>`;
+  }catch(e){
+    list.innerHTML=`<div style="color:var(--accent);font-size:12px;padding:12px">エラー: ${e.message}</div>`;
+  }
+}
+
+// ══ 日報送信 ══
+async function submitReport(){
+  const url=getGasUrl();
+  if(!url){alert("GAS URLを設定してください");return;}
+  const date=document.getElementById("f-date").value;
+  if(!date){alert("日付を入力してください");return;}
+
+  const payload={action:"addReport", date, inputTime:nowStr()};
+  let totalSales=0, totalQty=0;
+  ITEMS.forEach(item=>{
+    const mfg=Number(document.getElementById(`mfg-${item.id}`).value)||0;
+    const stk=Number(document.getElementById(`stk-${item.id}`).value)||0;
+    payload[`mfg_${item.id}`]=mfg;
+    payload[`stk_${item.id}`]=stk;
+    payload[`sales_${item.id}`]=mfg*item.cost;
+    totalSales+=mfg*item.cost;
+    totalQty+=mfg;
+  });
+  const hours=parseFloat(document.getElementById("f-hours").value)||0;
+  payload.totalSales=totalSales;
+  payload.totalQty=totalQty;
+  payload.hours=hours;
+  payload.jijiSales=hours>0?Math.round(totalSales/hours):0;
+
+  const btn=document.getElementById("submit-btn");
+  btn.disabled=true; btn.textContent="送信中…";
+  try{
+    const res=await fetch(url,{method:"POST",body:JSON.stringify(payload)});
+    const json=await res.json();
+    if(json.status!=="ok") throw new Error(json.message||"エラー");
+    btn.classList.add("saved"); btn.textContent="✓ 登録しました！";
+    setTimeout(()=>{btn.classList.remove("saved");btn.disabled=false;btn.textContent="日報を登録する →";resetForm();},2000);
+  }catch(e){
+    alert("送信エラー: "+e.message);
+    btn.disabled=false; btn.textContent="日報を登録する →";
+  }
+}
+
+function resetForm(){
+  document.getElementById("f-date").value=today();
+  document.getElementById("f-hours").value="";
+  ITEMS.forEach(item=>{
+    ["mfg","stk"].forEach(t=>{
+      const el=document.getElementById(`${t}-${item.id}`);
+      el.value=""; el.classList.remove("has-value");
+    });
+  });
+  document.getElementById("shipment-list").innerHTML='<div class="empty" style="padding:20px">「当日分を取得」を押してください</div>';
+  calcSummary();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// ══ 履歴読み込み ══
+async function loadHistory(){
+  const url=getGasUrl();
+  if(!url){alert("GAS URLを設定してください");return;}
+  const list=document.getElementById("history-list");
+  list.innerHTML='<div class="loading">読み込み中…</div>';
+  try{
+    const res=await fetch(`${url}?action=listReports`);
+    const json=await res.json();
+    if(json.status!=="ok") throw new Error(json.message);
+    const reports=(json.reports||[]).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    if(!reports.length){list.innerHTML='<div class="empty">日報データがありません</div>';return;}
+    list.innerHTML=reports.map(r=>`
+      <div class="history-card">
+        <div class="history-date">📅 ${fmtDate(r.date)}</div>
+        <div class="history-grid">
+          <div class="history-item">
+            <div class="history-item-label">製造売上高</div>
+            <div class="history-item-value">¥${fmtNum(r.totalSales||0)}</div>
+          </div>
+          <div class="history-item">
+            <div class="history-item-label">人時売上高</div>
+            <div class="history-item-value">¥${fmtNum(r.jijiSales||0)}</div>
+          </div>
+          <div class="history-item">
+            <div class="history-item-label">総製造個数</div>
+            <div class="history-item-value">${fmtNum(r.totalQty||0)}個</div>
+          </div>
+          <div class="history-item">
+            <div class="history-item-label">労働時間</div>
+            <div class="history-item-value">${r.hours||0}時間</div>
+          </div>
+        </div>
+      </div>`).join("");
+  }catch(e){
+    list.innerHTML=`<div style="color:var(--accent);font-size:12px;padding:12px">エラー: ${e.message}</div>`;
+  }
+}
+
+updateBanner();
+initForm();
+calcSummary();
+</script>
+</body>
+</html>
