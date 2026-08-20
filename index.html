@@ -209,8 +209,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
           <div class="summary-item-value" id="summary-jiji">—</div>
         </div>
         <div class="summary-item">
-          <div class="summary-item-label">総製造個数</div>
-          <div class="summary-item-value" id="summary-total">0個</div>
+          <div class="summary-item-label">労働時間</div>
+          <div class="summary-item-value" id="summary-hours">—</div>
         </div>
       </div>
     </div>
@@ -318,18 +318,17 @@ function initForm(){
 
 // ══ 集計計算 ══
 function calcSummary(){
-  let sales=0, totalQty=0;
+  let sales=0;
   ITEMS.forEach(item=>{
     const qty=Number(document.getElementById(`mfg-${item.id}`).value)||0;
     sales += qty * item.cost;
-    totalQty += qty;
   });
   const hours=parseFloat(document.getElementById("f-hours").value)||0;
   const jiji=hours>0 ? Math.round(sales/hours) : null;
 
   document.getElementById("summary-sales").textContent=`¥${fmtNum(sales)}`;
-  document.getElementById("summary-total").textContent=`${fmtNum(totalQty)}個`;
   document.getElementById("summary-jiji").textContent=jiji ? `¥${fmtNum(jiji)}` : "—";
+  document.getElementById("summary-hours").textContent=hours>0 ? `${hours}時間` : "—";
 }
 
 // ══ 食パン出荷数取得（店舗×商品の表形式） ══
@@ -428,19 +427,16 @@ async function submitReport(){
   if(!date){alert("日付を入力してください");return;}
 
   const payload={action:"addReport", date, inputTime:nowStr()};
-  let totalSales=0, totalQty=0;
+  let totalSales=0;
   ITEMS.forEach(item=>{
     const mfg=Number(document.getElementById(`mfg-${item.id}`).value)||0;
     const stk=Number(document.getElementById(`stk-${item.id}`).value)||0;
     payload[`mfg_${item.id}`]=mfg;
     payload[`stk_${item.id}`]=stk;
-    payload[`sales_${item.id}`]=mfg*item.cost;
     totalSales+=mfg*item.cost;
-    totalQty+=mfg;
   });
   const hours=parseFloat(document.getElementById("f-hours").value)||0;
   payload.totalSales=totalSales;
-  payload.totalQty=totalQty;
   payload.hours=hours;
   payload.jijiSales=hours>0?Math.round(totalSales/hours):0;
 
@@ -497,13 +493,25 @@ async function loadHistory(){
             <div class="history-item-value">¥${fmtNum(r.jijiSales||0)}</div>
           </div>
           <div class="history-item">
-            <div class="history-item-label">総製造個数</div>
-            <div class="history-item-value">${fmtNum(r.totalQty||0)}個</div>
-          </div>
-          <div class="history-item">
             <div class="history-item-label">労働時間</div>
             <div class="history-item-value">${r.hours||0}時間</div>
           </div>
+        </div>
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;">製造数 / ストック数</div>
+          ${ITEMS.map(item=>{
+            const mfg=r[`mfg_${item.id}`]||0;
+            const stk=r[`stk_${item.id}`]||0;
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+              <span style="color:var(--text)">${item.name}</span>
+              <span>
+                <span style="color:var(--accent);font-weight:700">${mfg}</span>
+                <span style="color:var(--text2);margin:0 4px">/</span>
+                <span style="color:var(--blue);font-weight:700">${stk}</span>
+                <span style="color:var(--text2);font-size:10px;margin-left:2px">${item.unit}</span>
+              </span>
+            </div>`;
+          }).join("")}
         </div>
       </div>`).join("");
   }catch(e){
