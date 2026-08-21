@@ -137,6 +137,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
   <!-- 日報入力 -->
   <div id="tab-input-content">
 
+    <!-- 編集バナー -->
+    <div id="edit-banner" style="display:none;background:#FFF0F3;border:1px solid #F0C0C8;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--accent);align-items:center;gap:10px;">
+      ✏️ 訂正モード
+      <button onclick="cancelEdit()" style="margin-left:auto;background:transparent;border:1px solid #F0C0C8;border-radius:6px;padding:3px 12px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;">キャンセル</button>
+    </div>
+
     <!-- 日付 -->
     <div class="date-row">
       <span class="date-label">📅 日付</span>
@@ -419,6 +425,37 @@ async function fetchShipment(){
   }
 }
 
+// ══ 編集状態 ══
+let _editingDate = null;
+
+function editReport(r){
+  _editingDate = r.date;
+  switchTab('input');
+  // フォームに値をセット
+  document.getElementById("f-date").value = r.date;
+  document.getElementById("f-hours").value = r.hours||"";
+  ITEMS.forEach(item=>{
+    const mEl=document.getElementById(`mfg-${item.id}`);
+    const sEl=document.getElementById(`stk-${item.id}`);
+    const mv=r[`mfg_${item.id}`]||0;
+    const sv=r[`stk_${item.id}`]||0;
+    mEl.value=mv||""; mEl.classList.toggle("has-value",mv>0);
+    sEl.value=sv||""; sEl.classList.toggle("has-value",sv>0);
+  });
+  calcSummary();
+  // 編集バナー表示
+  document.getElementById("edit-banner").style.display="flex";
+  document.getElementById("submit-btn").textContent="訂正を保存する →";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function cancelEdit(){
+  _editingDate=null;
+  document.getElementById("edit-banner").style.display="none";
+  document.getElementById("submit-btn").textContent="日報を登録する →";
+  resetForm();
+}
+
 // ══ 日報送信 ══
 async function submitReport(){
   const url=getGasUrl();
@@ -426,7 +463,8 @@ async function submitReport(){
   const date=document.getElementById("f-date").value;
   if(!date){alert("日付を入力してください");return;}
 
-  const payload={action:"addReport", date, inputTime:nowStr()};
+  const isEdit=!!_editingDate;
+  const payload={action: isEdit?"updateReport":"addReport", date, inputTime:nowStr()};
   let totalSales=0;
   ITEMS.forEach(item=>{
     const mfg=Number(document.getElementById(`mfg-${item.id}`).value)||0;
@@ -446,11 +484,14 @@ async function submitReport(){
     const res=await fetch(url,{method:"POST",body:JSON.stringify(payload)});
     const json=await res.json();
     if(json.status!=="ok") throw new Error(json.message||"エラー");
-    btn.classList.add("saved"); btn.textContent="✓ 登録しました！";
+    btn.classList.add("saved");
+    btn.textContent=isEdit?"✓ 訂正しました！":"✓ 登録しました！";
+    _editingDate=null;
+    document.getElementById("edit-banner").style.display="none";
     setTimeout(()=>{btn.classList.remove("saved");btn.disabled=false;btn.textContent="日報を登録する →";resetForm();},2000);
   }catch(e){
     alert("送信エラー: "+e.message);
-    btn.disabled=false; btn.textContent="日報を登録する →";
+    btn.disabled=false; btn.textContent=isEdit?"訂正を保存する →":"日報を登録する →";
   }
 }
 
@@ -482,7 +523,10 @@ async function loadHistory(){
     if(!reports.length){list.innerHTML='<div class="empty">日報データがありません</div>';return;}
     list.innerHTML=reports.map(r=>`
       <div class="history-card">
-        <div class="history-date">📅 ${fmtDate(r.date)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="history-date">📅 ${fmtDate(r.date)}</div>
+          <button onclick='editReport(${JSON.stringify(r)})' style="background:#FFF0F3;border:1px solid #F0C0C8;border-radius:8px;padding:6px 14px;color:var(--accent);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">✏️ 編集</button>
+        </div>
         <div class="history-grid">
           <div class="history-item">
             <div class="history-item-label">製造売上高</div>
