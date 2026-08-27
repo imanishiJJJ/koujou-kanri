@@ -446,8 +446,8 @@ function editReport(r){
     const sEl=document.getElementById(`stk-${item.id}`);
     const mv=r[`mfg_${item.id}`]||0;
     const sv=r[`stk_${item.id}`]||0;
-    mEl.value=mv||""; mEl.classList.toggle("has-value",mv>0);
-    sEl.value=sv||""; sEl.classList.toggle("has-value",sv>0);
+    if(mEl){ mEl.value=mv||""; mEl.classList.toggle("has-value",mv>0); }
+    if(sEl){ sEl.value=sv||""; sEl.classList.toggle("has-value",sv>0); }
   });
   calcSummary();
   // 編集バナー表示
@@ -474,8 +474,9 @@ async function submitReport(){
   const payload={action: isEdit?"updateReport":"addReport", date, inputTime:nowStr()};
   let totalSales=0;
   ITEMS.forEach(item=>{
-    const mfg=Number(document.getElementById(`mfg-${item.id}`).value)||0;
-    const stk=Number(document.getElementById(`stk-${item.id}`).value)||0;
+    const mfg=Number(document.getElementById(`mfg-${item.id}`)?.value)||0;
+    const stkEl=document.getElementById(`stk-${item.id}`);
+    const stk=stkEl ? Number(stkEl.value)||0 : 0;
     payload[`mfg_${item.id}`]=mfg;
     payload[`stk_${item.id}`]=stk;
     totalSales+=mfg*item.cost;
@@ -506,10 +507,10 @@ function resetForm(){
   document.getElementById("f-date").value=today();
   document.getElementById("f-hours").value="";
   ITEMS.forEach(item=>{
-    ["mfg","stk"].forEach(t=>{
-      const el=document.getElementById(`${t}-${item.id}`);
-      el.value=""; el.classList.remove("has-value");
-    });
+    const mEl=document.getElementById(`mfg-${item.id}`);
+    const sEl=document.getElementById(`stk-${item.id}`);
+    if(mEl){ mEl.value=""; mEl.classList.remove("has-value"); }
+    if(sEl){ sEl.value=""; sEl.classList.remove("has-value"); }
   });
   document.getElementById("shipment-list").innerHTML='<div class="empty" style="padding:20px">「当日分を取得」を押してください</div>';
   calcSummary();
