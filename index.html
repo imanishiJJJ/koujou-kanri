@@ -238,12 +238,15 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 <script>
 // ══ 商品マスタ（製造対象） ══
 const ITEMS = [
-  {id:1,  name:"食パン（合計）",        unit:"斤", cost:610},
-  {id:5,  name:"生ドーナツプレーン",     unit:"個", cost:105},
-  {id:6,  name:"生ドーナツチョコ",      unit:"個", cost:145},
-  {id:24, name:"生ドーナツプレーン生地", unit:"個", cost:53},
-  {id:25, name:"生ドーナツココア生地",   unit:"個", cost:66},
-  {id:26, name:"食パン生地",            unit:"個", cost:28},
+  {id:1,  name:"食パン（合計）",        unit:"斤",  cost:610},
+  {id:5,  name:"生ドーナツプレーン",     unit:"個",  cost:105},
+  {id:6,  name:"生ドーナツチョコ",      unit:"個",  cost:145},
+  {id:24, name:"生ドーナツプレーン生地", unit:"個",  cost:53},
+  {id:25, name:"生ドーナツココア生地",   unit:"個",  cost:66},
+  {id:26, name:"食パン生地",            unit:"個",  cost:28},
+  {id:27, name:"生ドーナツ湯だね",      unit:"kg",  cost:0},
+  {id:28, name:"食パン中種",            unit:"kg",  cost:0},
+  {id:29, name:"食パン湯種",            unit:"kg",  cost:0},
 ];
 
 // 食パン出荷数（発注履歴から取得対象）
@@ -302,16 +305,19 @@ function initForm(){
   ITEMS.forEach(item=>{
     const row=document.createElement("div");
     row.className="item-row";
+    const isKg = item.unit==="kg";
+    const inputMode = isKg ? "decimal" : "numeric";
+    const step = isKg ? "0.1" : "1";
     row.innerHTML=`
       <span class="item-name">${item.name}</span>
       <span class="item-unit">${item.unit}</span>
       <div class="double-input">
-        <input type="number" inputmode="numeric" min="0" placeholder="0"
+        <input type="number" inputmode="${inputMode}" min="0" step="${step}" placeholder="0"
           class="num-input" id="mfg-${item.id}"
           onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
           onwheel="event.preventDefault()"
           oninput="this.classList.toggle('has-value',this.value!=='');calcSummary()">
-        <input type="number" inputmode="numeric" min="0" placeholder="0"
+        <input type="number" inputmode="${inputMode}" min="0" step="${step}" placeholder="0"
           class="num-input" id="stk-${item.id}"
           onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
           onwheel="event.preventDefault()"
