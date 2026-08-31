@@ -169,22 +169,23 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
         <span class="section-badge badge-orange">発注履歴より自動取得</span>
       </div>
       <button class="fetch-btn" onclick="fetchShipment()" style="margin-bottom:12px;width:100%;">↻ 当日分を取得</button>
-      <div style="overflow-x:auto;">
-        <table id="shipment-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:480px;">
+      <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table id="shipment-table" style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px;">
           <thead>
             <tr style="background:var(--accent);color:#fff;">
-              <th style="padding:6px 8px;text-align:left;font-weight:600;white-space:nowrap">品名</th>
+              <th style="padding:6px 6px;text-align:left;font-weight:600;white-space:nowrap;position:sticky;left:0;background:var(--accent);">品名</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">太田川</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">山王</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">中島</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">小牧</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">長久手</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">庄内</th>
-              <th style="padding:6px 8px;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.15)">合計</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">常滑</th>
+              <th style="padding:6px 6px;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.15)">合計</th>
             </tr>
           </thead>
           <tbody id="shipment-tbody">
-            <tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text2)">「当日分を取得」を押してください</td></tr>
+            <tr><td colspan="9" style="padding:16px;text-align:center;color:var(--text2)">「当日分を取得」を押してください</td></tr>
           </tbody>
         </table>
       </div>
@@ -345,8 +346,8 @@ function calcSummary(){
 }
 
 // ══ 食パン出荷数取得（店舗×商品の表形式） ══
-const SHIPMENT_STORES = ["太田川店","山王店","中島店","小牧店","長久手店","庄内緑地公園店"];
-const SHIPMENT_STORE_LABELS = ["太田川","山王","中島","小牧","長久手","庄内"];
+const SHIPMENT_STORES = ["太田川店","山王店","中島店","小牧店","長久手店","庄内緑地公園店","常滑店"];
+const SHIPMENT_STORE_LABELS = ["太田川","山王","中島","小牧","長久手","庄内","常滑"];
 const SHIPMENT_ITEMS_DEF = [
   {id:1, name:"食パン7枚切",       unit:"斤"},
   {id:2, name:"食パン10枚切",      unit:"斤"},
@@ -361,7 +362,7 @@ async function fetchShipment(){
   if(!url){alert("GAS URLを設定してください");return;}
   const date=document.getElementById("f-date").value;
   const tbody=document.getElementById("shipment-tbody");
-  tbody.innerHTML='<tr><td colspan="8" style="padding:16px;text-align:center;color:var(--text2)">取得中…</td></tr>';
+  tbody.innerHTML='<tr><td colspan="9" style="padding:16px;text-align:center;color:var(--text2)">取得中…</td></tr>';
   try{
     const res=await fetch(`${url}?action=list`);
     const json=await res.json();
@@ -428,7 +429,7 @@ async function fetchShipment(){
 
     tbody.innerHTML=html;
   }catch(e){
-    tbody.innerHTML=`<tr><td colspan="8" style="padding:12px;color:var(--accent);font-size:12px">エラー: ${e.message}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="9" style="padding:12px;color:var(--accent);font-size:12px">エラー: ${e.message}</td></tr>`;
   }
 }
 
