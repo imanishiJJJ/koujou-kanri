@@ -182,11 +182,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">庄内</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">常滑</th>
               <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">荒尾</th>
+              <th style="padding:6px 4px;text-align:center;font-weight:600;white-space:nowrap">宝神</th>
               <th style="padding:6px 6px;text-align:center;font-weight:600;white-space:nowrap;background:rgba(0,0,0,.15)">合計</th>
             </tr>
           </thead>
           <tbody id="shipment-tbody">
-            <tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text2)">「当日分を取得」を押してください</td></tr>
+            <tr><td colspan="11" style="padding:16px;text-align:center;color:var(--text2)">「当日分を取得」を押してください</td></tr>
           </tbody>
         </table>
       </div>
@@ -347,8 +348,8 @@ function calcSummary(){
 }
 
 // ══ 食パン出荷数取得（店舗×商品の表形式） ══
-const SHIPMENT_STORES = ["太田川店","山王店","中島店","小牧店","長久手店","庄内緑地公園店","常滑店","東海荒尾店"];
-const SHIPMENT_STORE_LABELS = ["太田川","山王","中島","小牧","長久手","庄内","常滑","荒尾"];
+const SHIPMENT_STORES = ["太田川店","山王店","中島店","小牧店","長久手店","庄内緑地公園店","常滑店","東海荒尾店","宝神店"];
+const SHIPMENT_STORE_LABELS = ["太田川","山王","中島","小牧","長久手","庄内","常滑","荒尾","宝神"];
 const SHIPMENT_ITEMS_DEF = [
   {id:1, name:"食パン7枚切",       unit:"斤"},
   {id:2, name:"食パン10枚切",      unit:"斤"},
@@ -363,7 +364,7 @@ async function fetchShipment(){
   if(!url){alert("GAS URLを設定してください");return;}
   const date=document.getElementById("f-date").value;
   const tbody=document.getElementById("shipment-tbody");
-  tbody.innerHTML='<tr><td colspan="10" style="padding:16px;text-align:center;color:var(--text2)">取得中…</td></tr>';
+  tbody.innerHTML='<tr><td colspan="11" style="padding:16px;text-align:center;color:var(--text2)">取得中…</td></tr>';
   try{
     const res=await fetch(`${url}?action=list`);
     const json=await res.json();
@@ -430,7 +431,7 @@ async function fetchShipment(){
 
     tbody.innerHTML=html;
   }catch(e){
-    tbody.innerHTML=`<tr><td colspan="10" style="padding:12px;color:var(--accent);font-size:12px">エラー: ${e.message}</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="11" style="padding:12px;color:var(--accent);font-size:12px">エラー: ${e.message}</td></tr>`;
   }
 }
 
