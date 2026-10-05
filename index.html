@@ -168,7 +168,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
         <span class="section-title">🚚 食パン出荷数</span>
         <span class="section-badge badge-orange">発注履歴より自動取得</span>
       </div>
-      <button class="fetch-btn" onclick="fetchShipment()" style="margin-bottom:12px;width:100%;">↻ 当日分を取得</button>
+      <button class="fetch-btn" onclick="fetchShipment()" style="margin-bottom:8px;width:100%;">↻ 当日分を取得</button>
+      <div id="shipment-date-label" style="font-size:12px;color:var(--text2);margin-bottom:8px;min-height:18px;"></div>
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table id="shipment-table" style="width:100%;border-collapse:collapse;font-size:11px;min-width:520px;">
           <thead>
@@ -430,7 +431,9 @@ async function fetchShipment(){
     html += subTotalRow(donutItems, "🍩 ドーナツ合計", "#FFF3E0");
 
     tbody.innerHTML=html;
+    document.getElementById("shipment-date-label").textContent=`📅 ${fmtDate(date)} の出荷数`;
   }catch(e){
+    document.getElementById("shipment-date-label").textContent="";
     tbody.innerHTML=`<tr><td colspan="11" style="padding:12px;color:var(--accent);font-size:12px">エラー: ${e.message}</td></tr>`;
   }
 }
