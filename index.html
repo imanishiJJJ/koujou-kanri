@@ -50,19 +50,22 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .badge-green{background:#E8F5E9;color:#2E7D32;}
 
 /* 商品入力行 */
-.item-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.item-row:last-child{margin-bottom:0;}
-.item-name{flex:1;font-size:13px;color:var(--text);font-weight:500;}
-.item-unit{font-size:11px;color:var(--text2);white-space:nowrap;}
-.num-input{width:90px;background:var(--surf2);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-family:inherit;font-size:18px;font-weight:700;text-align:center;-moz-appearance:textfield;appearance:textfield;}
+.item-row{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.item-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.item-name-row{display:flex;align-items:baseline;gap:5px;margin-bottom:6px;}
+.item-name{font-size:13px;color:var(--text);font-weight:600;}
+.item-unit{font-size:11px;color:var(--text2);}
+.num-input{width:100%;box-sizing:border-box;min-width:0;background:var(--surf2);border:1.5px solid var(--border);border-radius:8px;padding:8px 4px;color:var(--text);font-family:inherit;font-size:18px;font-weight:700;text-align:center;-moz-appearance:textfield;appearance:textfield;}
 .num-input::-webkit-inner-spin-button,.num-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0;}
 .num-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(200,56,90,.1);}
 .num-input.has-value{border-color:var(--accent);background:#FFF0F3;color:var(--accent);}
-.num-input:focus::-webkit-outer-spin-button{-webkit-appearance:none;}
 
 /* 3列入力（製造数・ストック数・ロス数） */
-.double-input{display:flex;gap:6px;}
-.double-label{font-size:10px;color:var(--text2);text-align:center;margin-bottom:3px;}
+.triple-input{display:flex;gap:6px;}
+.triple-input-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+.triple-input-label{font-size:10px;text-align:center;font-weight:600;color:var(--text2);}
+.triple-input-label.loss{color:#E65100;}
+.input-spacer{flex:1;}
 
 /* 労働時間 */
 .hours-row{display:flex;align-items:center;gap:12px;}
@@ -154,11 +157,6 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
       <div class="section-header">
         <span class="section-title">🍞 製造数・ストック数・ロス数</span>
         <span class="section-badge badge-blue">個数入力</span>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:8px;">
-        <div style="width:90px;text-align:center;font-size:10px;color:var(--text2);font-weight:600;">製造数</div>
-        <div style="width:90px;text-align:center;font-size:10px;color:var(--text2);font-weight:600;">ストック数</div>
-        <div style="width:90px;text-align:center;font-size:10px;color:#E65100;font-weight:600;">ロス数</div>
       </div>
       <div id="items-grid"></div>
     </div>
@@ -327,25 +325,40 @@ function initForm(){
     const inputMode = isKg ? "decimal" : "numeric";
     const step = isKg ? "0.1" : "1";
     row.innerHTML=`
-      <span class="item-name">${item.name}</span>
-      <span class="item-unit">${item.unit}</span>
-      <div class="double-input">
-        <input type="number" inputmode="${inputMode}" min="0" step="${step}" placeholder="0"
-          class="num-input" id="mfg-${item.id}"
-          onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
-          onwheel="event.preventDefault()"
-          oninput="this.classList.toggle('has-value',this.value!=='');calcSummary()">
-        ${isKai ? '<div style="width:90px"></div>' : `<input type="number" inputmode="${inputMode}" min="0" step="${step}" placeholder="0"
-          class="num-input" id="stk-${item.id}"
-          onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
-          onwheel="event.preventDefault()"
-          oninput="this.classList.toggle('has-value',this.value!=='')">`}
-        ${isKai ? '<div style="width:90px"></div>' : `<input type="number" inputmode="numeric" min="0" step="1" placeholder="0"
-          class="num-input" id="loss-${item.id}"
-          style="border-color:#FFB74D;"
-          onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
-          onwheel="event.preventDefault()"
-          oninput="this.classList.toggle('has-value',this.value!=='')">`}
+      <div class="item-name-row">
+        <span class="item-name">${item.name}</span>
+        <span class="item-unit">${item.unit}</span>
+      </div>
+      <div class="triple-input">
+        <div class="triple-input-col">
+          <span class="triple-input-label">製造数</span>
+          <input type="number" inputmode="${inputMode}" min="0" step="${step}" placeholder="0"
+            class="num-input" id="mfg-${item.id}"
+            onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
+            onwheel="event.preventDefault()"
+            oninput="this.classList.toggle('has-value',this.value!=='');calcSummary()">
+        </div>
+        <div class="triple-input-col">
+          <span class="triple-input-label">ストック数</span>
+          ${isKai
+            ? '<div class="num-input" style="visibility:hidden;pointer-events:none;"></div>'
+            : `<input type="number" inputmode="${inputMode}" min="0" step="${step}" placeholder="0"
+              class="num-input" id="stk-${item.id}"
+              onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
+              onwheel="event.preventDefault()"
+              oninput="this.classList.toggle('has-value',this.value!=='')">`}
+        </div>
+        <div class="triple-input-col">
+          <span class="triple-input-label loss">ロス数</span>
+          ${isKai
+            ? '<div class="num-input" style="visibility:hidden;pointer-events:none;"></div>'
+            : `<input type="number" inputmode="numeric" min="0" step="1" placeholder="0"
+              class="num-input" id="loss-${item.id}"
+              style="border-color:#FFB74D;"
+              onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()"
+              onwheel="event.preventDefault()"
+              oninput="this.classList.toggle('has-value',this.value!=='')">`}
+        </div>
       </div>`;
     grid.appendChild(row);
   });
